@@ -1,0 +1,6 @@
+rootProject.name = 'services_app'
+
+include 'service_definitions'
+include 'auth_service'
+include 'gateway'
+//include 'users_service'

@@ -1,0 +1,4 @@
+auth_service:
+  grpc:
+    host: "10.47.242.81"
+    port: 6565

@@ -1,0 +1,10 @@
+**/.idea
+**/.settings
+**/.gradle
+**/.vertx
+**/.DS_Store
+**/.classpath
+**/.project
+**/out
+**/*.iml
+**/build

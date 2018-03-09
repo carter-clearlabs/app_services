@@ -1,0 +1,64 @@
+buildscript {
+  repositories {
+    mavenCentral()
+    jcenter()
+  }
+  dependencies {
+    classpath('com.google.protobuf:protobuf-gradle-plugin:0.8.0')
+  }
+}
+
+plugins {
+  id 'java'
+}
+
+apply plugin: 'com.google.protobuf'
+
+repositories {
+  jcenter()
+}
+
+version = '1.0-SNAPSHOT'
+sourceCompatibility = '1.8'
+def grpcVersion = '1.9.0' // CURRENT_GRPC_VERSION
+
+dependencies {
+  // GRPC resources
+  compile "io.grpc:grpc-netty:${grpcVersion}"
+  compile "io.grpc:grpc-protobuf:${grpcVersion}"
+  compile "io.grpc:grpc-stub:${grpcVersion}"
+
+  compile "io.vertx:vertx-grpc:3.5.1"
+
+}
+
+protobuf {
+  protoc {
+    artifact = 'com.google.protobuf:protoc:3.2.0'
+  }
+  plugins {
+    grpc {
+      artifact = "io.grpc:protoc-gen-grpc-java:${grpcVersion}"
+      artifact = "io.vertx:protoc-gen-grpc-java:${grpcVersion}"
+    }
+  }
+  generateProtoTasks {
+    all()*.plugins {
+      grpc
+    }
+  }
+}
+
+// Inform IDEs like IntelliJ IDEA, Eclipse or NetBeans about the generated code.
+sourceSets {
+  main {
+    java {
+      srcDirs 'build/generated/source/proto/main/grpc'
+      srcDirs 'build/generated/source/proto/main/java'
+    }
+  }
+}
+
+task wrapper(type: Wrapper) {
+  gradleVersion = '4.3.1'
+}

@@ -1,0 +1,40 @@
+---
+apiVersion: "extensions/v1beta1"
+kind: "Deployment"
+metadata:
+  name: "app-gateway"
+  namespace: "default"
+  labels:
+    app: "app-gateway"
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: "app-gateway"
+  template:
+    metadata:
+      labels:
+        app: "app-gateway"
+    spec:
+      containers:
+      - name: "gateway"
+        image: "gcr.io/clearview-dev/gateway"
+        ports:
+          - containerPort: 9090
+            protocol: TCP
+---
+apiVersion: "autoscaling/v1"
+kind: "HorizontalPodAutoscaler"
+metadata:
+  name: "app-gateway-hpa"
+  namespace: "default"
+  labels:
+    app: "app-gateway"
+spec:
+  scaleTargetRef:
+    kind: "Deployment"
+    name: "app-gateway"
+    apiVersion: "apps/v1beta1"
+  minReplicas: 1
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 80
