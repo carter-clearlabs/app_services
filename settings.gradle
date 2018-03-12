@@ -2,5 +2,5 @@ rootProject.name = 'services_app'
 
 include 'service_definitions'
 include 'auth_service'
-include 'gateway'
+include 'orb_backend'
 //include 'users_service'

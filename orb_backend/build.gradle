@@ -34,7 +34,7 @@ repositories {
 
 version = '1.0-SNAPSHOT'
 sourceCompatibility = '1.8'
-mainClassName = 'com.clearlabs.gateway.GatewayMain'
+mainClassName = 'com.clearlabs.orb.OrbBackend'
 def grpcVersion = '1.9.0' // CURRENT_GRPC_VERSION
 def vertxVersion = '3.5.1'
 
@@ -45,6 +45,7 @@ dependencies {
   compile "io.vertx:vertx-core:$vertxVersion"
   compile "io.vertx:vertx-web:$vertxVersion"
   compile "io.vertx:vertx-rx-java2:$vertxVersion"
+  compile "io.vertx:vertx-auth-jwt:$vertxVersion"
   compile "io.vertx:vertx-circuit-breaker:$vertxVersion"
 
   compile 'org.lognet:grpc-spring-boot-starter:2.1.5'

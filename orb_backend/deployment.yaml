@@ -2,23 +2,23 @@
 apiVersion: "extensions/v1beta1"
 kind: "Deployment"
 metadata:
-  name: "app-gateway"
+  name: "app-orb"
   namespace: "default"
   labels:
-    app: "app-gateway"
+    app: "app-orb"
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: "app-gateway"
+      app: "app-orb"
   template:
     metadata:
       labels:
-        app: "app-gateway"
+        app: "app-orb"
     spec:
       containers:
-      - name: "gateway"
-        image: "gcr.io/clearview-dev/gateway"
+      - name: "orb"
+        image: "gcr.io/clearview-dev/orb"
         ports:
           - containerPort: 9090
             protocol: TCP
@@ -26,14 +26,14 @@ spec:
 apiVersion: "autoscaling/v1"
 kind: "HorizontalPodAutoscaler"
 metadata:
-  name: "app-gateway-hpa"
+  name: "app-orb-hpa"
   namespace: "default"
   labels:
-    app: "app-gateway"
+    app: "app-orb"
 spec:
   scaleTargetRef:
     kind: "Deployment"
-    name: "app-gateway"
+    name: "app-orb"
     apiVersion: "apps/v1beta1"
   minReplicas: 1
   maxReplicas: 5
