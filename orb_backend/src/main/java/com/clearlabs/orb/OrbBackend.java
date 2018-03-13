@@ -2,8 +2,11 @@ package com.clearlabs.orb;
 
 import com.clearlab.services.auth.gen.AuthServiceGrpc;
 import io.grpc.ManagedChannel;
+import io.vertx.ext.auth.KeyStoreOptions;
+import io.vertx.ext.auth.jwt.JWTAuthOptions;
 import io.vertx.grpc.VertxChannelBuilder;
 import io.vertx.reactivex.core.Vertx;
+import io.vertx.reactivex.ext.auth.jwt.JWTAuth;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -29,7 +32,7 @@ public class OrbBackend {
   public String clientHost;
 
   @Bean
-  public AuthServiceGrpc.AuthServiceVertxStub authService(){
+  public AuthServiceGrpc.AuthServiceVertxStub authServiceClient(){
     // Extract host/port to config
     final ManagedChannel channel =
       VertxChannelBuilder
@@ -40,4 +43,13 @@ public class OrbBackend {
     return AuthServiceGrpc.newVertxStub(channel);
   }
 
+  @Bean
+  public JWTAuth getJWTProvider(){
+    JWTAuthOptions config = new JWTAuthOptions()
+        .setKeyStore(new KeyStoreOptions()
+            .setPath("keystore.jceks") // manually created and stored with the project - not ideal and should be extracted to docker injected config.
+            .setPassword("secret"));
+
+    return JWTAuth.create(vertx(), config);
+  }
 }
