@@ -1,4 +1,4 @@
-package com.clearlabs.gateway;
+package com.clearlabs.orb;
 
 import com.clearlab.services.auth.gen.AuthServiceGrpc;
 import io.grpc.ManagedChannel;
@@ -11,10 +11,10 @@ import org.springframework.context.annotation.Bean;
 
 
 @SpringBootApplication
-public class GatewayMain {
+public class OrbBackend {
 
   public static void main(String[] args) {
-    SpringApplication.run(GatewayMain.class, args);
+    SpringApplication.run(OrbBackend.class, args);
   }
 
   @Bean
