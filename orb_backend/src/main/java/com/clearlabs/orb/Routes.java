@@ -4,13 +4,12 @@ import com.clearlab.services.auth.gen.AuthServiceGrpc;
 import com.clearlab.services.auth.gen.Error;
 import com.clearlab.services.auth.gen.LoginRequest;
 import com.clearlab.services.auth.gen.LoginResponse;
+import io.vavr.Tuple2;
 import io.vavr.control.Try;
 import io.vertx.circuitbreaker.CircuitBreakerOptions;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.auth.KeyStoreOptions;
-import io.vertx.ext.auth.jwt.JWTAuthOptions;
 import io.vertx.ext.jwt.JWTOptions;
 import io.vertx.reactivex.circuitbreaker.CircuitBreaker;
 import io.vertx.reactivex.core.Future;
@@ -29,9 +28,7 @@ import javax.annotation.PostConstruct;
 import java.util.Arrays;
 import java.util.Objects;
 
-import static io.vavr.API.$;
-import static io.vavr.API.Case;
-import static io.vavr.API.Match;
+import static io.vavr.API.*;
 
 @Slf4j
 @Component
@@ -42,6 +39,9 @@ public class Routes {
 
   @Autowired
   Vertx vertx;
+
+  @Autowired
+  JWTAuth provider;
 
   CircuitBreakerOptions options = new CircuitBreakerOptions()
     .setMaxFailures(3) // How many times do we fail til we are in an OPEN state
@@ -63,16 +63,8 @@ public class Routes {
     // Add CORS support
     router.route().handler(RoutesUtils.corsHandler());
 
-    JWTAuthOptions config = new JWTAuthOptions()
-        .setKeyStore(new KeyStoreOptions()
-            .setPath("keystore.jceks")
-            .setPassword("secret"));
-
-    JWTAuth provider = JWTAuth.create(vertx, config);
-//    JWTAuth
-
     // Handle the login route
-    router.post("/login").handler(handleLogin(provider));
+    router.post("/login").handler(handleLogin);
 
     router.route().handler(JWTAuthHandler.create(provider));
 
@@ -102,8 +94,8 @@ public class Routes {
     });
   }
 
-  private Handler<RoutingContext> handleLogin(JWTAuth provider) {
-    return (routingContext) -> {
+  private Handler<RoutingContext> handleLogin =
+    (routingContext) -> {
       HttpServerResponse response = routingContext.response();
       JsonObject loginForm = routingContext.getBodyAsJson();
 
@@ -115,31 +107,28 @@ public class Routes {
       authServiceCircuitBreaker.executeWithFallback(
         future -> clientLogin(future, username, password),
         fallback -> fallback()
-      ).setHandler(handleCircuitBreaker(response, username, provider));
+      ).setHandler(loginResponseHandler(response, username));
     };
-  };
 
-  private Handler<AsyncResult<LoginResponse>> handleCircuitBreaker(HttpServerResponse response, String username, JWTAuth provider) {
+  private Handler<AsyncResult<LoginResponse>> loginResponseHandler(HttpServerResponse response, String username) {
     return (result) -> {
       if (result.failed()) {
-        log.error("Failed Service Call", result.cause());
+        log.error("Failed Auth Service Call", result.cause());
         // TODO : Consider mimicking the same Error format as the protobuf message
         response.setStatusCode(500).end(new JsonObject().put("status", "failed").put("error", result.cause().getMessage()).encodePrettily());
       } else {
         JsonObject jsonResponse = Try.of(RoutesUtils.protobufToJson(result.result())).getOrElse(new JsonObject().put("status", "error - can not translate protobuf to string"));
         // Extract the error code from the LoginResponse if there is one, otherwise its a 200
-        Integer statusCode = Match(jsonResponse.getJsonObject("error")).of(
-            Case($(Objects::nonNull), (v) -> v.getInteger("code")),
-            Case($(Objects::isNull), 200)
+        Tuple2<Integer, JsonObject> resp = Match(jsonResponse.getJsonObject("error")).of(
+            Case($(Objects::nonNull), (v) -> new Tuple2<>(v.getInteger("code"), jsonResponse)),
+            Case($(Objects::isNull), () -> {
+              JWTOptions options = new JWTOptions().setIssuer("clearlabs").setPermissions(Arrays.asList("cl_admin", "cl_view")).setSubject(username);
+              jsonResponse.put("token", provider.generateToken(new JsonObject().put("custom_data", "anything we want here"), options));
+              return new Tuple2<>(200, jsonResponse);
+            })
         );
-        if(statusCode == 200){
-          JWTOptions options = new JWTOptions().setIssuer("clearlabs").setPermissions(Arrays.asList("cl_admin", "cl_view")).setSubject(username);
-          jsonResponse.put("token", provider.generateToken(new JsonObject().put("custom_data", "anything we want here"), options));
-          response.setStatusCode(statusCode).end(jsonResponse.encodePrettily());
-        } else {
-          response.setStatusCode(statusCode).end(jsonResponse.encodePrettily());
-        }
 
+        response.setStatusCode(resp._1).end(resp._2.encodePrettily());
 
       }
     };
