@@ -4,11 +4,14 @@ import com.clearlab.services.auth.gen.AuthServiceGrpc;
 import com.clearlab.services.auth.gen.Error;
 import com.clearlab.services.auth.gen.LoginRequest;
 import com.clearlab.services.auth.gen.LoginResponse;
+import io.vavr.Function2;
 import io.vavr.Tuple2;
 import io.vavr.control.Try;
+import io.vavr.control.Validation;
 import io.vertx.circuitbreaker.CircuitBreakerOptions;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.jwt.JWTOptions;
 import io.vertx.reactivex.circuitbreaker.CircuitBreaker;
@@ -28,6 +31,8 @@ import javax.annotation.PostConstruct;
 import java.util.Arrays;
 import java.util.Objects;
 
+import static com.clearlabs.orb.RoutesUtils.isAtLeast;
+import static com.clearlabs.orb.RoutesUtils.isNotEmpty;
 import static io.vavr.API.*;
 
 @Slf4j
@@ -82,9 +87,9 @@ public class Routes {
     });
   }
 
-  private void clientLogin(Future<LoginResponse> future, String username, String password) {
+  private void clientLogin(Future<LoginResponse> future, LoginRequest loginRequest) {
 
-    authService.login(LoginRequest.newBuilder().setUsername(username).setPassword(password).build(), loginResponseHandler -> {
+    authService.login(loginRequest, loginResponseHandler -> {
       if(loginResponseHandler.failed()){
         loginResponseHandler.cause().printStackTrace();
         future.fail(loginResponseHandler.cause());
@@ -102,39 +107,53 @@ public class Routes {
       String username = loginForm.getString("username");
       String password = loginForm.getString("password");
 
-      // TODO : Add some validation to the parameters above
-      // Call the CircuitBreaker
-      authServiceCircuitBreaker.executeWithFallback(
-        future -> clientLogin(future, username, password),
-        fallback -> fallback()
-      ).setHandler(loginResponseHandler(response, username));
+      Function2<String, String, Validation<String, String>> isNotEmptyAndAtLeast3 = (name, str) ->
+        Validation.combine(isNotEmpty(str), isAtLeast(3, str))
+          .ap((valid1, _valid2) -> valid1)
+          .fold(error -> Validation.invalid(String.format("%s is invalid : %s", name, error)),
+            Validation::valid);
+
+      Validation.combine(isNotEmptyAndAtLeast3.apply("username", username),
+        isNotEmptyAndAtLeast3.apply("password", password))
+        .ap(Tuple2::new)
+        .fold(
+          error -> {
+            JsonArray errors = new JsonArray();
+            error.toStream().map(errors::add);
+            response.setStatusCode(400).end(new JsonObject().put("error", errors).encodePrettily());
+            return null;},
+          success -> {
+            authServiceCircuitBreaker.executeWithFallback(
+              future -> clientLogin(future, LoginRequest.newBuilder().setUsername(success._1).setPassword(success._2).build()),
+              fallback -> loginFallback()
+              ).setHandler(loginResponseHandler(response, username));
+            return null;
+          }
+        );
     };
 
   private Handler<AsyncResult<LoginResponse>> loginResponseHandler(HttpServerResponse response, String username) {
     return (result) -> {
-      if (result.failed()) {
-        log.error("Failed Auth Service Call", result.cause());
-        // TODO : Consider mimicking the same Error format as the protobuf message
-        response.setStatusCode(500).end(new JsonObject().put("status", "failed").put("error", result.cause().getMessage()).encodePrettily());
-      } else {
-        JsonObject jsonResponse = Try.of(RoutesUtils.protobufToJson(result.result())).getOrElse(new JsonObject().put("status", "error - can not translate protobuf to string"));
-        // Extract the error code from the LoginResponse if there is one, otherwise its a 200
-        Tuple2<Integer, JsonObject> resp = Match(jsonResponse.getJsonObject("error")).of(
-            Case($(Objects::nonNull), (v) -> new Tuple2<>(v.getInteger("code"), jsonResponse)),
-            Case($(Objects::isNull), () -> {
-              JWTOptions options = new JWTOptions().setIssuer("clearlabs").setPermissions(Arrays.asList("cl_admin", "cl_view")).setSubject(username);
-              jsonResponse.put("token", provider.generateToken(new JsonObject().put("custom_data", "anything we want here"), options));
-              return new Tuple2<>(200, jsonResponse);
-            })
-        );
 
-        response.setStatusCode(resp._1).end(resp._2.encodePrettily());
+      AsyncResult<LoginResponse> _res = result.otherwise((t)-> LoginResponse.newBuilder().setError(Error.newBuilder().setCode(500).setMessage(t.getMessage()).build()).build());
 
-      }
+      JsonObject jsonResponse = Try.of(RoutesUtils.protobufToJson(_res.result())).getOrElse(new JsonObject().put("status", "error - can not translate protobuf to string"));
+
+      // Create tuple of status code and json response
+      Tuple2<Integer, JsonObject> resp = Match(jsonResponse.getJsonObject("error")).of(
+          Case($(Objects::nonNull), (v) -> new Tuple2<>(v.getInteger("code"), jsonResponse)), // If error then return error
+          Case($(Objects::isNull), () -> { // if success (no error), then produce jwt token
+            JWTOptions options = new JWTOptions().setIssuer("clearlabs").setPermissions(Arrays.asList("cl_admin", "cl_view")).setSubject(username);
+            jsonResponse.put("token", provider.generateToken(new JsonObject().put("custom_data", "anything we want here"), options));
+            return new Tuple2<>(200, jsonResponse);
+          })
+      );
+
+      response.setStatusCode(resp._1).end(resp._2.encodePrettily());
     };
   }
 
-  private LoginResponse fallback() {
-    return LoginResponse.newBuilder().setError(Error.newBuilder().setCode(503).setMessage("Auth Service is not available at this time (fallback).").build()).build();
+  private LoginResponse loginFallback() {
+    return LoginResponse.newBuilder().setError(Error.newBuilder().setCode(503).setMessage("Auth Service is not available at this time (loginFallback).").build()).build();
   }
 }

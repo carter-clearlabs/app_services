@@ -11,7 +11,6 @@ import org.springframework.util.StringUtils;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.function.Function;
 
 public class RoutesUtils {
 
@@ -38,5 +37,7 @@ public class RoutesUtils {
     return () -> new JsonObject(JsonFormat.printer().print(msg));
   }
 
-  public static Function<String, Validation<String, String>> isNotEmpty = (str) -> StringUtils.hasLength(str) ? Validation.invalid("") : Validation.valid(str);
+  static Validation<String, String> isNotEmpty(String str) { return !StringUtils.hasLength(str) ? Validation.invalid("Field must not be empty") : Validation.valid(str); }
+  static Validation<String, String> isAtLeast(Integer len, String str) { return str.length() <= len ? Validation.invalid(String.format("Field must be at least %d characters.", len)) : Validation.valid(str); }
+
 }
