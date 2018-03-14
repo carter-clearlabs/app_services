@@ -1,0 +1,5 @@
+Needs a proxy server to connect to Cloud SQL:
+	mkdir mysql-proxy
+	curl -o cloud_sql_proxy https://dl.google.com/cloudsql/cloud_sql_proxy.darwin.amd64
+	./cloud_sql_proxy -instances=clearview-dev:us-west1:clearview=tcp:5432
+	

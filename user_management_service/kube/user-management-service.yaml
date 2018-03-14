@@ -1,0 +1,64 @@
+##################################################################################################
+# Ratings service
+##################################################################################################
+apiVersion: v1
+kind: Service
+metadata:
+  name: user-management
+  labels:
+    app: user-management
+spec:
+  ports:
+  - port: 8090
+    name: http
+  selector:
+    app: user-management
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: user-management
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: user-management
+        version: v1
+    spec:
+      containers:
+      - name: user-management
+        image: gcr.io/clearview-dev/user_management_service:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8090
+        env:
+          - name: DB_USER
+            valueFrom:
+              secretKeyRef:
+                name: cloudsql-db-credentials
+                key: username
+          - name: DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: cloudsql-db-credentials
+                key: password
+      - name: cloudsql-proxy
+        image: gcr.io/cloudsql-docker/gce-proxy:1.11
+        command: ["/cloud_sql_proxy",
+                    "-instances=clearview-dev:us-west1:clearview=tcp:5432",
+                    "-credential_file=/secrets/cloudsql/credentials.json"]
+        volumeMounts:
+          - name: cloudsql-dev-credentials
+            mountPath: /secrets/cloudsql
+            readOnly: true
+          - name: ssl-certs
+            mountPath: /etc/ssl/certs
+      volumes:
+        - name: cloudsql-dev-credentials
+          secret:
+            secretName: cloudsql-dev-credentials
+        - name: ssl-certs
+          hostPath:
+            path: /etc/ssl/certs
+---
