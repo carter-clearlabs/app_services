@@ -1,9 +1,9 @@
 package com.clearlabs.services.auth;
 
-import com.clearlab.services.auth.gen.LoginRequest;
-import com.clearlab.services.auth.gen.LoginResponse;
-import com.clearlab.services.auth.gen.Response;
-import com.clearlab.services.auth.gen.ValidateTokenRequest;
+import com.clearlabs.services.auth.gen.LoginRequest;
+import com.clearlabs.services.auth.gen.LoginResponse;
+import com.clearlabs.services.common.gen.Response;
+import com.clearlabs.services.auth.gen.ValidateTokenRequest;
 import io.grpc.stub.StreamObserver;
 import org.junit.Test;
 import org.junit.runner.RunWith;

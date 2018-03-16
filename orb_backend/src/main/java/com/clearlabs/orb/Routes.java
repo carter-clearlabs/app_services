@@ -1,9 +1,9 @@
 package com.clearlabs.orb;
 
-import com.clearlab.services.auth.gen.AuthServiceGrpc;
-import com.clearlab.services.auth.gen.Error;
-import com.clearlab.services.auth.gen.LoginRequest;
-import com.clearlab.services.auth.gen.LoginResponse;
+import com.clearlabs.services.auth.gen.AuthServiceGrpc;
+import com.clearlabs.services.common.gen.Error;
+import com.clearlabs.services.auth.gen.LoginRequest;
+import com.clearlabs.services.auth.gen.LoginResponse;
 import io.vavr.Function2;
 import io.vavr.Tuple2;
 import io.vavr.control.Try;

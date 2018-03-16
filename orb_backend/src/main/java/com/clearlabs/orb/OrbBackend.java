@@ -1,6 +1,6 @@
 package com.clearlabs.orb;
 
-import com.clearlab.services.auth.gen.AuthServiceGrpc;
+import com.clearlabs.services.auth.gen.AuthServiceGrpc;
 import io.grpc.ManagedChannel;
 import io.vertx.ext.auth.KeyStoreOptions;
 import io.vertx.ext.auth.jwt.JWTAuthOptions;

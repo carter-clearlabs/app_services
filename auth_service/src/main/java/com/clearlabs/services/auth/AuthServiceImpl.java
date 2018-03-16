@@ -1,7 +1,10 @@
 package com.clearlabs.services.auth;
 
-import com.clearlab.services.auth.gen.*;
-import com.clearlab.services.auth.gen.Error;
+import com.clearlabs.services.auth.gen.*;
+
+import com.clearlabs.services.common.gen.Error;
+import com.clearlabs.services.common.gen.Response;
+
 import io.grpc.Metadata;
 import io.grpc.ServerCall;
 import io.grpc.ServerCallHandler;
