@@ -64,6 +64,8 @@ dependencies {
   compile "io.grpc:grpc-protobuf:$grpcVersion"
   compile "io.grpc:grpc-stub:$grpcVersion"
 
+  compile 'com.h2database:h2:1.4.194'
+
   testCompile "org.springframework.boot:spring-boot-starter-test:$springVersion"
 }
 

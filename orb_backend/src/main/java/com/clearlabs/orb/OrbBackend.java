@@ -1,6 +1,7 @@
 package com.clearlabs.orb;
 
 import com.clearlabs.services.auth.gen.AuthServiceGrpc;
+import com.clearlabs.services.user.gen.UserManagementServiceGrpc;
 import io.grpc.ManagedChannel;
 import io.vertx.ext.auth.KeyStoreOptions;
 import io.vertx.ext.auth.jwt.JWTAuthOptions;
@@ -26,21 +27,38 @@ public class OrbBackend {
   }
 
   @Value("${auth_service.grpc.port:6565}")
-  public Integer clientPort;
+  public Integer authServiceClientPort;
 
   @Value("${auth_service.grpc.host:localhost}")
-  public String clientHost;
+  public String authServiceClientHost;
 
   @Bean
   public AuthServiceGrpc.AuthServiceVertxStub authServiceClient(){
     // Extract host/port to config
     final ManagedChannel channel =
       VertxChannelBuilder
-        .forAddress(vertx().getDelegate(), clientHost, clientPort)
+        .forAddress(vertx().getDelegate(), authServiceClientHost, authServiceClientPort)
         .usePlaintext(true)
         .build();
 
     return AuthServiceGrpc.newVertxStub(channel);
+  }
+
+  @Value("${user_service.grpc.port:6565}")
+  public Integer userServiceClientPort;
+
+  @Value("${user_service.grpc.host:localhost}")
+  public String userServiceClientHost;
+
+  @Bean
+  public UserManagementServiceGrpc.UserManagementServiceVertxStub userManagementClient(){
+    final ManagedChannel channel =
+      VertxChannelBuilder
+        .forAddress(vertx().getDelegate(), userServiceClientHost, userServiceClientPort)
+        .usePlaintext(true)
+        .build();
+
+    return UserManagementServiceGrpc.newVertxStub(channel);
   }
 
   @Bean

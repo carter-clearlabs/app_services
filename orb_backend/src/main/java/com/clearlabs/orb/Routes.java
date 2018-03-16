@@ -4,6 +4,7 @@ import com.clearlabs.services.auth.gen.AuthServiceGrpc;
 import com.clearlabs.services.common.gen.Error;
 import com.clearlabs.services.auth.gen.LoginRequest;
 import com.clearlabs.services.auth.gen.LoginResponse;
+import com.clearlabs.services.user.gen.UserManagementServiceGrpc;
 import io.vavr.Function2;
 import io.vavr.Tuple2;
 import io.vavr.control.Try;
@@ -43,6 +44,9 @@ public class Routes {
   AuthServiceGrpc.AuthServiceVertxStub authService;
 
   @Autowired
+  UserManagementServiceGrpc.UserManagementServiceVertxStub userService;
+
+  @Autowired
   Vertx vertx;
 
   @Autowired
@@ -73,6 +77,8 @@ public class Routes {
 
     router.route().handler(JWTAuthHandler.create(provider));
 
+//    router.post("/addUser").handler(handleAddUser);
+
     router.get("/protected").handler(h -> {
       log.info(h.user().principal().encodePrettily() + "");
       h.response().end(Match(h.user()).of(
@@ -98,6 +104,41 @@ public class Routes {
       }
     });
   }
+
+//  private Handler<RoutingContext> handleAddUser =
+//    (routingContext) -> {
+//      HttpServerResponse response = routingContext.response();
+//      JsonObject addUserPost = routingContext.getBodyAsJson();
+//      String firstname = addUserPost.getString("firstname");
+//      String lastname = addUserPost.getString("lastname");
+//      String email = addUserPost.getString("email");
+//
+//      Function2<String, String, Validation<String, String>> isNotEmptyAndAtLeast3 = (name, str) ->
+//        Validation.combine(isNotEmpty(str), isAtLeast(3, str))
+//          .ap((valid1, _valid2) -> valid1)
+//          .fold(error -> Validation.invalid(String.format("%s is invalid : %s", name, error)),
+//            Validation::valid);
+//
+//      Validation.combine(
+//        isNotEmptyAndAtLeast3.apply("firstname", firstname),
+//        isNotEmptyAndAtLeast3.apply("lastname", lastname))
+//        .ap(Tuple2::new)
+//        .fold(
+//          error -> {
+//            JsonArray errors = new JsonArray();
+//            error.toStream().map(errors::add);
+//            response.setStatusCode(400).end(new JsonObject().put("error", errors).encodePrettily());
+//            return null;},
+//          success -> {
+//            authServiceCircuitBreaker.executeWithFallback(
+//              future -> clientLogin(future, LoginRequest.newBuilder().setUsername(success._1).setPassword(success._2).build()),
+//              fallback -> loginFallback()
+//            ).setHandler(loginResponseHandler(response, username));
+//            return null;
+//          }
+//        );
+//
+//    };
 
   private Handler<RoutingContext> handleLogin =
     (routingContext) -> {

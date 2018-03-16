@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.clearlabs.services.user.gen";
+option java_outer_classname = "UserService";
+
+package services;
+
+import "common/common.proto";
+
+// The greeting service definition.
+service UserManagementService {
+  // Sends a greeting
+  rpc addUser(AddUserRequest) returns (Response) {}
+  rpc findAllUsers(AllUserRequest) returns (UserListResponse) {}
+}
+
+// QUERIES
+message AddUserRequest {
+  string customer = 1;
+  User user = 2;
+}
+
+message AllUserRequest {
+  string customer = 1;
+}
+
+message User {
+  string firstname = 1;
+  string lastname = 2;
+  string email = 3;
+}
+
+message UserListResponse {
+  repeated User users = 1;
+}
