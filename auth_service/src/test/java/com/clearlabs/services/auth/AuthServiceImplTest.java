@@ -2,8 +2,6 @@ package com.clearlabs.services.auth;
 
 import com.clearlabs.services.auth.gen.LoginRequest;
 import com.clearlabs.services.auth.gen.LoginResponse;
-import com.clearlabs.services.common.gen.Response;
-import com.clearlabs.services.auth.gen.ValidateTokenRequest;
 import io.grpc.stub.StreamObserver;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -37,20 +35,4 @@ public class AuthServiceImplTest {
     authService.login(LoginRequest.newBuilder().setPassword("test").setUsername("test").build(), resp);
   }
 
-  @Test
-  public void testValidate(){
-    StreamObserver<Response> resp = new StreamObserver<Response>() {
-      @Override
-      public void onNext(Response value) {
-        assertEquals("Token does not match expectations.", "ok", value.getStatus());
-      }
-      @Override
-      public void onError(Throwable t) {
-        fail(t.getMessage());
-      }
-      @Override
-      public void onCompleted() {}
-    };
-    authService.validateToken(ValidateTokenRequest.newBuilder().setToken("some_token").build(), resp);
-  }
 }
