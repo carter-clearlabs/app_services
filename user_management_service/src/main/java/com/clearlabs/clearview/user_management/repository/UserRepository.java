@@ -11,6 +11,6 @@ import com.clearlabs.clearview.user_management.model.User;
 public interface UserRepository extends PagingAndSortingRepository<User, Long> {
 
 	List<User> findByLastName(String lastName);
-	<S extends User> S save(User user);
+	List<User> findByEmail(String email);
 	
 }

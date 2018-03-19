@@ -1,9 +1,7 @@
 package com.clearlabs.services.auth;
 
-import com.clearlab.services.auth.gen.LoginRequest;
-import com.clearlab.services.auth.gen.LoginResponse;
-import com.clearlab.services.auth.gen.Response;
-import com.clearlab.services.auth.gen.ValidateTokenRequest;
+import com.clearlabs.services.auth.gen.LoginRequest;
+import com.clearlabs.services.common.gen.Response;
 import io.grpc.stub.StreamObserver;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -22,10 +20,10 @@ public class AuthServiceImplTest {
 
   @Test
   public void testLogin(){
-    StreamObserver<LoginResponse> resp = new StreamObserver<LoginResponse>() {
+    StreamObserver<Response> resp = new StreamObserver<Response>() {
       @Override
-      public void onNext(LoginResponse value) {
-        assertEquals("Token does not match expectations.", "some_real_token", value.getToken());
+      public void onNext(Response value) {
+        assertEquals("Response should not have an error.", false, value.hasError());
       }
       @Override
       public void onError(Throwable t) {
@@ -37,20 +35,4 @@ public class AuthServiceImplTest {
     authService.login(LoginRequest.newBuilder().setPassword("test").setUsername("test").build(), resp);
   }
 
-  @Test
-  public void testValidate(){
-    StreamObserver<Response> resp = new StreamObserver<Response>() {
-      @Override
-      public void onNext(Response value) {
-        assertEquals("Token does not match expectations.", "ok", value.getStatus());
-      }
-      @Override
-      public void onError(Throwable t) {
-        fail(t.getMessage());
-      }
-      @Override
-      public void onCompleted() {}
-    };
-    authService.validateToken(ValidateTokenRequest.newBuilder().setToken("some_token").build(), resp);
-  }
 }

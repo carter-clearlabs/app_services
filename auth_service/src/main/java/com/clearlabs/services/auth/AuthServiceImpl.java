@@ -1,46 +1,41 @@
 package com.clearlabs.services.auth;
 
-import com.clearlab.services.auth.gen.*;
-import com.clearlab.services.auth.gen.Error;
-import io.grpc.Metadata;
-import io.grpc.ServerCall;
-import io.grpc.ServerCallHandler;
-import io.grpc.ServerInterceptor;
+import com.clearlabs.services.auth.gen.*;
+
+import com.clearlabs.services.common.gen.Error;
+import com.clearlabs.services.common.gen.Response;
+import com.clearlabs.services.user.gen.UserManagementServiceGrpc;
+import com.clearlabs.services.user.gen.VerifyPasswordRequest;
 import io.grpc.stub.StreamObserver;
 import lombok.extern.slf4j.Slf4j;
 import org.lognet.springboot.grpc.GRpcService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
 
 @Component
 @GRpcService(interceptors = { LogInterceptor.class })
 @Slf4j
 public class AuthServiceImpl extends AuthServiceGrpc.AuthServiceImplBase {
 
-  @Override
-  public void login(LoginRequest request, StreamObserver<LoginResponse> responseObserver) {
-    if(!request.getUsername().equalsIgnoreCase("test") || !request.getPassword().equalsIgnoreCase("test")){
-      responseObserver.onNext(LoginResponse.newBuilder().setError(Error.newBuilder().setCode(403).setMessage("Invalid Credentials").build()).build());
-    } else {
-      responseObserver.onNext(LoginResponse.newBuilder().setToken("some_real_token").build());
-    }
-    responseObserver.onCompleted();
-  }
+  @Autowired
+  UserManagementServiceGrpc.UserManagementServiceVertxStub userClient;
 
   @Override
-  public void validateToken(ValidateTokenRequest request, StreamObserver<Response> responseObserver) {
-    responseObserver.onNext(Response.newBuilder().setStatus("ok").build());
-    responseObserver.onCompleted();
-  }
+  public void login(LoginRequest request, StreamObserver<Response> responseObserver) {
 
-  @PostConstruct
-  public void setupInterceptors(){
-    new ServerInterceptor() {
-      @Override
-      public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(ServerCall<ReqT, RespT> call, Metadata headers, ServerCallHandler<ReqT, RespT> next) {
-        return null;
+    userClient.verifyPassword(VerifyPasswordRequest.newBuilder().setPassword(request.getPassword()).setUsername(request.getUsername()).build(), serviceHandler ->{
+
+      if(serviceHandler.failed()) {
+        responseObserver.onError(serviceHandler.cause());
+        responseObserver.onCompleted();
+      } else {
+        responseObserver.onNext(serviceHandler.result());
+        responseObserver.onCompleted();
       }
-    };
+
+    });
+
   }
+
 }

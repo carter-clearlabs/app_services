@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.clearlabs.services.common.gen";
+option java_outer_classname = "Common";
+
+message Response {
+  Error error =1;
+  string status = 2;
+}
+
+message Error {
+  int32 code = 1;
+  string message = 2;
+}

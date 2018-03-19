@@ -1,2 +1,7 @@
 grpc:
   port: 6565
+
+user_service:
+  grpc:
+    port: 6566
+    host: localhost
