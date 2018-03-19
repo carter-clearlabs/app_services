@@ -1,0 +1,37 @@
+version: '3'
+services:
+  db:
+    restart: always
+    image: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - /tmp/docker/postgresql:/var/lib/postgresql
+  web:
+    build: .
+    ports:
+     - "8090:8090"
+  auth_service:
+    image: "gcr.io/clearview-dev/auth_service"
+    ports:
+      - "6565:6565"
+  user_service:
+    image: "gcr.io/clearview-dev/user_service"
+    environment:
+      - spring.profiles.active=development
+    ports:
+      - "6566:6566"
+    depends_on:
+      - db
+    command: >
+          /bin/bash -c "
+            while ! nc -z db 5432;
+            do
+              echo sleeping;
+              sleep 100;
+            done;
+            echo Connected!;
+          "

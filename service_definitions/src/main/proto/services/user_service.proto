@@ -13,12 +13,17 @@ service UserManagementService {
   // Sends a greeting
   rpc addUser(AddUserRequest) returns (Response) {}
   rpc findAllUsers(AllUserRequest) returns (UserListResponse) {}
+
+  rpc verifyPassword(VerifyPasswordRequest) returns (Response) {}
 }
 
 // QUERIES
 message AddUserRequest {
   string customer = 1;
-  User user = 2;
+  string firstname = 2;
+  string lastname = 3;
+  string email = 5;
+  string password = 6;
 }
 
 message AllUserRequest {
@@ -33,4 +38,10 @@ message User {
 
 message UserListResponse {
   repeated User users = 1;
+  Error error = 2;
+}
+
+message VerifyPasswordRequest{
+  string username = 1;
+  string password = 2;
 }

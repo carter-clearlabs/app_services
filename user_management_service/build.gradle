@@ -34,7 +34,7 @@ repositories {
 
 version = '1.0-SNAPSHOT'
 sourceCompatibility = '1.8'
-mainClassName = 'com.clearlabs.orb.OrbBackend'
+mainClassName = 'com.clearlabs.clearview.user_management.UserManagementServiceApplication'
 def grpcVersion = '1.9.0' // CURRENT_GRPC_VERSION
 def vertxVersion = '3.5.1'
 def springVersion = '2.0.0.RELEASE'
@@ -44,11 +44,6 @@ dependencies {
 
   compile "org.springframework.boot:spring-boot-starter-data-jpa:$springVersion"
   compile group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: '2.0.0.RELEASE'
-
-  // AXON framework for CQRS/ES
-//  compile 'org.axonframework:axon-core:3.1'
-  compile 'org.axonframework:axon-spring-boot-starter:3.1'
-//  compile 'org.axonframework:axon-amqp:3.1'
 
   compile "com.google.cloud.sql:mysql-socket-factory:1.0.5"
   compile "org.springframework.boot:spring-boot-starter-data-rest:$springVersion"
@@ -64,7 +59,7 @@ dependencies {
   compile "io.grpc:grpc-protobuf:$grpcVersion"
   compile "io.grpc:grpc-stub:$grpcVersion"
 
-  compile 'com.h2database:h2:1.4.194'
+//  compile 'com.h2database:h2:1.4.194'
 
   testCompile "org.springframework.boot:spring-boot-starter-test:$springVersion"
 }

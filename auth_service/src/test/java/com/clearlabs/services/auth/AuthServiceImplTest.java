@@ -1,7 +1,7 @@
 package com.clearlabs.services.auth;
 
 import com.clearlabs.services.auth.gen.LoginRequest;
-import com.clearlabs.services.auth.gen.LoginResponse;
+import com.clearlabs.services.common.gen.Response;
 import io.grpc.stub.StreamObserver;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -20,10 +20,10 @@ public class AuthServiceImplTest {
 
   @Test
   public void testLogin(){
-    StreamObserver<LoginResponse> resp = new StreamObserver<LoginResponse>() {
+    StreamObserver<Response> resp = new StreamObserver<Response>() {
       @Override
-      public void onNext(LoginResponse value) {
-        assertEquals("Token does not match expectations.", "some_real_token", value.getToken());
+      public void onNext(Response value) {
+        assertEquals("Response should not have an error.", false, value.hasError());
       }
       @Override
       public void onError(Throwable t) {

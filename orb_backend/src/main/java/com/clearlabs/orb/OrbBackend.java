@@ -44,7 +44,7 @@ public class OrbBackend {
     return AuthServiceGrpc.newVertxStub(channel);
   }
 
-  @Value("${user_service.grpc.port:6565}")
+  @Value("${user_service.grpc.port:6566}")
   public Integer userServiceClientPort;
 
   @Value("${user_service.grpc.host:localhost}")
